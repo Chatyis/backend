@@ -17,6 +17,7 @@ import os
 from backend.settings import BASE_DIR
 import json
 from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponseBadRequest,HttpResponseNotAllowed
 
 def patch_asscalar(a):
     return a.item()
@@ -217,20 +218,20 @@ def weight_map(_coefficient_map, _dominant_colors_list):
 
 
 def format_colors(colors_list):
-    dominant_colors_list_RGB = list(map(lambda x: ', '.join(list(reversed(re.split(r',\s*|\s+', x[1:-1])))), colors_list))
+    dominant_colors_list_RGB = [item.strip('[]').split() for item in colors_list]
+    dominant_colors_list_RGB = [list(map(int,reversed(sub_array))) for sub_array in dominant_colors_list_RGB]
     return dominant_colors_list_RGB
 
 
 def calculate_colors(img, applyRag, areCustomParametersApplied, clusterAmount, maximumFileSize, ragThreshold):
     setattr(np, "asscalar", patch_asscalar)
 
-    clusters_amt = int(clusterAmount) if areCustomParametersApplied else 32
-    rag_cut_threshold = int(ragThreshold) if areCustomParametersApplied else 16
-    max_img_size = int(maximumFileSize) if areCustomParametersApplied else 250
+    clusters_amt = int(clusterAmount) if areCustomParametersApplied and int(clusterAmount)<100 else 32
+    rag_cut_threshold = int(ragThreshold) if areCustomParametersApplied and int(ragThreshold)<32 else 16
+    max_img_size = int(maximumFileSize) if areCustomParametersApplied and int(maximumFileSize)<1000 else 250
     skip_rag = not applyRag.lower() == 'true'
 
     try:
-        print(os.path.join(BASE_DIR, '464745415.jpg'))
         # img = cv.imread(os.path.join(BASE_DIR, '464745415.jpg'))
         if img is None:
             raise FileNotFoundError("Image not found or couldn't be loaded")
@@ -297,8 +298,12 @@ def test_list(request):
             clusterAmount = request.POST.get("clusterAmount", None)
             maximumFileSize = request.POST.get("maximumFileSize", None)
             ragThreshold = request.POST.get("ragThreshold", None)
-            print(applyRag,areCustomParametersApplied,clusterAmount,maximumFileSize,ragThreshold)
+            # print(applyRag,areCustomParametersApplied,clusterAmount,maximumFileSize,ragThreshold)
             return JsonResponse({"result":calculate_colors(image,applyRag,areCustomParametersApplied,clusterAmount,maximumFileSize,ragThreshold)}, safe=False)
+        else:
+            return HttpResponseBadRequest()
+    else:
+        return HttpResponseNotAllowed()
 
 
 
