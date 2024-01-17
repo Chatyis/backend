@@ -266,6 +266,8 @@ def calculate_colors(img, applyRag, areCustomParametersApplied, clusterAmount, m
 
         # calculate contrast values for each color
         _occurrence_map = occurrence_map(img)
+        if(len(_occurrence_map) == 1):
+            return format_colors(_occurrence_map)
         contrast_map, saturation_map = contrast_and_saturation_map(img)
 
         # pk = Ck + Ak + Sk
@@ -289,7 +291,7 @@ def calculate_colors(img, applyRag, areCustomParametersApplied, clusterAmount, m
 
 
 @csrf_exempt
-def test_list(request):
+def colors(request):
     if(request.method == 'POST'):
         if(request.FILES.get("file", None) is not None):
             image = _grab_image(request.FILES["file"])

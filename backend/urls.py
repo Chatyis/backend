@@ -20,5 +20,5 @@ from backend import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('colors/', views.test_list)
+    path('colors/', views.colors)
 ]
